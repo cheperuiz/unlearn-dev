@@ -1,0 +1,21 @@
+version: '3.7'
+
+services: 
+    helloworld:
+        build:
+            context: ./docker
+            args:
+                - TZ=America/Mexico_City
+                - USERNAME=helloworld
+        user: 1000:1000
+        working_dir: /hello_world
+        # command: python -m ptvsd --host 0.0.0.0 --port 5678 --wait -m hello_world
+        command: jupyter notebook --config=/config/jupyter/jupyter_notebook_config.py
+        volumes:
+            - ./src:/hello_world
+            - ./config:/config
+        ports:
+            - 5678:5678
+            - 8888:8888
+
+
