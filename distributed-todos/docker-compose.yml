@@ -1,0 +1,26 @@
+version: '3.7'
+
+services:
+
+    todos:
+        build:
+            context: ./services/todos/docker
+            args:
+                - TZ=${TIMEZONE}
+                - USERNAME=${TODOS_USER}
+        environment: 
+            - TODOS_ROOT=${TODOS_ROOT}
+            - JUPYTER_CONFIG=${JUPYTER_CONFIG}
+            - GUNICORN_CONFIG=${GUNICORN_CONFIG}
+            - PYTHONPATH=${TODOS_ROOT}
+        user: 1000:1000
+        working_dir: ${TODOS_ROOT}
+        command: ["sh","scripts/start_jupyter.sh"]
+        volumes:
+            - ./services/todos/src:/${TODOS_ROOT}
+            - ./services/todos/config:/config
+        ports:
+            - 8888:8888 #Jupyter Notebook
+            - 5000:5000 #REST API
+
+
