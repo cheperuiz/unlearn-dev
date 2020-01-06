@@ -15,7 +15,7 @@ todos_schema = TodoSchema(many=True)
 dao = MockDao(TODOS_DB, todos_schema)
 
 # Create resource namespace:
-todos_ns = Namespace("todos", description="REST API TODOs resources.")
+todos_ns = Namespace("todos", description="REST API for TODO resources.")
 
 
 @todos_ns.route("/")
