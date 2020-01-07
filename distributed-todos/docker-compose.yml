@@ -13,14 +13,49 @@ services:
             - JUPYTER_CONFIG=${JUPYTER_CONFIG}
             - GUNICORN_CONFIG=${GUNICORN_CONFIG}
             - PYTHONPATH=${TODOS_ROOT}
+            - MONGO_USER=mongouser
+            - MONGO_PASSWORD=averysecurepassword
         user: 1000:1000
         working_dir: ${TODOS_ROOT}
         command: ["sh","scripts/start_jupyter.sh"]
         volumes:
             - ./services/todos/src:/${TODOS_ROOT}
             - ./services/todos/config:/config
+        networks: 
+            - mongo_network
         ports:
             - 8888:8888 #Jupyter Notebook
             - 5000:5000 #REST API
 
+
+    mongo:
+        image: mongo
+        environment:
+            - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER}
+            - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
+        volumes:
+            - mongo_data:/data/db
+        networks:
+            - mongo_network
+
+    mongo-express:
+        image: mongo-express
+        environment:
+            - ME_CONFIG_MONGODB_ADMINUSERNAME=${MONGO_USER}
+            - ME_CONFIG_MONGODB_ADMINPASSWORD=${MONGO_PASSWORD}
+        depends_on:
+            - mongo
+        networks:
+            - mongo_network
+        ports:
+            - 20048:8081
+
+networks:
+    mongo_network:
+        driver: bridge
+
+volumes: 
+    mongo_data:
+
+    
 

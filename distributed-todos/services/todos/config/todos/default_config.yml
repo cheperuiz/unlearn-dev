@@ -1,0 +1,8 @@
+database:
+    mongo:
+        type: mongodb
+        host: mongo
+        user: ${MONGO_USER}
+        password: ${MONGO_PASSWORD}
+        port: "27017"
+        db: todos_db
