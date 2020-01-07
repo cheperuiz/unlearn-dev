@@ -1,18 +1,32 @@
 # pylint: disable=import-error
 from uuid import uuid4
 
+import yaml
 from flask import Flask
 from flask_restplus import Resource, Api, Namespace, reqparse
 from marshmallow.exceptions import ValidationError
+from pymongo import MongoClient
 
 from models.todo import Todo, TodoSchema
-from models.todo_dao import MockDao
+from models.todo_dao import MockDao, MongoDAO
+from lib.common import make_url, replace_env
 
 TODOS_DB = "/todos/database/todos_db.json"
 
 todo_schema = TodoSchema()
 todos_schema = TodoSchema(many=True)
-dao = MockDao(TODOS_DB, todos_schema)
+
+
+def get_collection():
+    with open("/config/todos/default_config.yml", "r") as f:
+        config = yaml.load(f, yaml.SafeLoader)
+    replace_env(config)
+    url = make_url(config["database"]["mongo"], include_db=False)
+    client = MongoClient(url)
+    return client.todos.todos_collection
+
+
+dao = MongoDAO(get_collection(), TodoSchema)
 
 # Create resource namespace:
 todos_ns = Namespace("todos", description="REST API for TODO resources.")
@@ -51,8 +65,8 @@ class TodosDetails(Resource):
         return todo_schema.dump(todo) if todo else ("Not found.", 404)
 
     def delete(self, uuid):
-        uuid = dao.delete_by_uuid(uuid)
-        return uuid if uuid else ("Not found", 404)
+        r = dao.delete_by_uuid(uuid)
+        return uuid if r else ("Not found", 404)
 
     @todos_ns.param(
         "data", "Todo data (title & completed status).", _in="body", required=True, example=example_dict,
@@ -65,10 +79,10 @@ class TodosDetails(Resource):
         try:
             data = {"user_id": 0, "title": params["title"], "completed": params["completed"]}
             data = {k: v for k, v in data.items() if v is not None}
-            dao.update_item_by_uuid(uuid, data)
+            r = dao.update_by_uuid(uuid, data)
         except ValidationError as e:
             return (e.args, 422)
-        return uuid
+        return uuid if r else ("Not found", 404)
 
 
 # Create flask app:

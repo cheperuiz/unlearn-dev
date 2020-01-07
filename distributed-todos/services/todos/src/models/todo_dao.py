@@ -1,6 +1,37 @@
 import json
 
 
+class MongoDAO:
+    def __init__(self, collection, schema):
+        self._db = collection
+        self._schema = schema
+
+    def get_all(self):
+        todos_dict = list(self._db.find())
+        for todo in todos_dict:
+            todo["_id"] = str(todo["_id"])
+        return self._schema(many=True).load(todos_dict)
+
+    def get_by_uuid(self, uuid):
+        todo_dict = self._db.find_one({"uuid": uuid})
+        if todo_dict:
+            todo_dict["_id"] = str(todo_dict["_id"])
+            return self._schema().load(todo_dict)
+
+    def add_item(self, item):
+        item_dict = self._schema().dump(item)
+        r = self._db.insert_one(item_dict)
+        return r.inserted_id
+
+    def delete_by_uuid(self, uuid):
+        return self._db.delete_one({"uuid": uuid}).deleted_count
+
+    def update_by_uuid(self, uuid, data):
+        if not self._db.find_one({"uuid": uuid}):
+            return False
+        return self._db.update_one({"uuid": uuid}, {"$set": data}).acknowledged
+
+
 class MockDao:
     def __init__(self, path, schema):
         self._path = path
