@@ -26,7 +26,8 @@ class MockDao:
         item = [t for t in self._items if t.uuid == uuid]
         if item:
             self._items.pop(self._items.index(item[0]))
-        self._replace_file()
+            self._replace_file()
+            return item[0].uuid
 
     def update_item_by_uuid(self, uuid, data):
         item = self.get_by_uuid(uuid)
