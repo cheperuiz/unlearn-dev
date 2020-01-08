@@ -2,6 +2,7 @@
 from uuid import uuid4
 
 import yaml
+from redis import Redis
 from flask import Flask
 from flask_restplus import Resource, Api, Namespace, reqparse
 from marshmallow.exceptions import ValidationError
@@ -10,6 +11,7 @@ from pymongo import MongoClient
 from models.todo import Todo, TodoSchema
 from models.todo_dao import MockDao, MongoDAO
 from lib.common import make_url, replace_env
+from lib.cache import redis_cachable
 
 TODOS_DB = "/todos/database/todos_db.json"
 
@@ -17,16 +19,24 @@ todo_schema = TodoSchema()
 todos_schema = TodoSchema(many=True)
 
 
-def get_collection():
-    with open("/config/todos/default_config.yml", "r") as f:
-        config = yaml.load(f, yaml.SafeLoader)
-    replace_env(config)
-    url = make_url(config["database"]["mongo"], include_db=False)
-    client = MongoClient(url)
-    return client.todos.todos_collection
+with open("/config/todos/default_config.yml", "r") as f:
+    config = yaml.load(f, yaml.SafeLoader)
+replace_env(config)
+url = make_url(config["database"]["mongo"], include_db=False)
+client = MongoClient(url)
+collection = client.todos.todos_collection
 
 
-dao = MongoDAO(get_collection(), TodoSchema)
+dao = MongoDAO(collection, TodoSchema)
+
+redis_config = config["database"]["redis"]
+r = Redis(
+    host=redis_config["host"],
+    port=redis_config["port"],
+    db=redis_config["db"],
+    password=redis_config["password"],
+)
+
 
 # Create resource namespace:
 todos_ns = Namespace("todos", description="REST API for TODO resources.")
@@ -60,7 +70,9 @@ class TodosList(Resource):
 @todos_ns.route("/<string:uuid>")
 @todos_ns.param("uuid", "Receipt uuid")
 class TodosDetails(Resource):
+    @redis_cachable(r, "TodosDetailsGET", timeout=10)
     def get(self, uuid):
+        print("Called")
         todo = dao.get_by_uuid(uuid)
         return todo_schema.dump(todo) if todo else ("Not found.", 404)
 

@@ -15,6 +15,7 @@ services:
             - PYTHONPATH=${TODOS_ROOT}
             - MONGO_USER=mongouser
             - MONGO_PASSWORD=averysecurepassword
+            - REDIS_PASSWORD=${REDIS_PASSWORD}
         user: 1000:1000
         working_dir: ${TODOS_ROOT}
         command: ["sh","scripts/start_jupyter.sh"]
@@ -23,6 +24,7 @@ services:
             - ./services/todos/config:/config
         networks: 
             - mongo_network
+            - redis_network
         ports:
             - 8888:8888 #Jupyter Notebook
             - 5000:5000 #REST API
@@ -50,8 +52,23 @@ services:
         ports:
             - 20048:8081
 
+    redis:
+        image: redis:latest
+        environment:
+            - REDIS_PASSWORD=${REDIS_PASSWORD}
+        user: 1000:1000
+        command: [
+                sh,
+                -c,
+                'rm -f /data/dump.rdb && redis-server  --requirepass $REDIS_PASSWORD --save "" --appendonly "no"',
+            ] # disable persistence
+        networks:
+            - redis_network
+
 networks:
     mongo_network:
+        driver: bridge
+    redis_network:
         driver: bridge
 
 volumes: 
