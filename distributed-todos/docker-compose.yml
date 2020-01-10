@@ -20,14 +20,42 @@ services:
         working_dir: ${TODOS_ROOT}
         command: ["sh","scripts/start_all.sh"]
         volumes:
-            - ./services/todos/src:/${TODOS_ROOT}
+            - ./services/todos/src:${TODOS_ROOT}
             - ./services/todos/config:/config
+            - ./library:${TODOS_ROOT}/library
         networks: 
             - mongo_network
             - redis_network
         ports:
             - 8888:8888 #Jupyter Notebook
             - 5000:5000 #REST API
+            - 5555:5555 #Flower
+    reports:
+        build:
+            context: ./services/reports/docker
+            args:
+                - TZ=${TIMEZONE}
+                - USERNAME=${REPORTS_USER}
+        environment: 
+            - REPORTS_ROOT=${REPORTS_ROOT}
+            - JUPYTER_CONFIG=${JUPYTER_CONFIG}
+            - GUNICORN_CONFIG=${GUNICORN_CONFIG}
+            - PYTHONPATH=${REPORTS_ROOT}
+            - MONGO_USER=mongouser
+            - MONGO_PASSWORD=averysecurepassword
+            - REDIS_PASSWORD=${REDIS_PASSWORD}
+        user: 1000:1000
+        working_dir: ${REPORTS_ROOT}
+        command: ["sh","scripts/start_all.sh"]
+        volumes:
+            - ./services/reports/src:${REPORTS_ROOT}
+            - ./services/reports/config:/config
+            - ./library:${REPORTS_ROOT}/library
+        networks: 
+            - mongo_network
+            - redis_network
+        ports:
+            - 8889:8888 #Jupyter Notebook
 
 
     mongo:

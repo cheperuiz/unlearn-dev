@@ -5,7 +5,7 @@ database:
         user: ${MONGO_USER}
         password: ${MONGO_PASSWORD}
         port: "27017"
-        db: todos_db
+        db: reports_db
 
     redis:
         type: redis
