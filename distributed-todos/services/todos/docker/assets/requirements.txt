@@ -1,7 +1,12 @@
+celery
 flask
+flask-cors
 flask-restplus
+flower
 gunicorn
+hiredis
 jupyter
+lorem
 marshmallow
 pyyaml
 pymongo

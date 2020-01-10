@@ -18,7 +18,7 @@ services:
             - REDIS_PASSWORD=${REDIS_PASSWORD}
         user: 1000:1000
         working_dir: ${TODOS_ROOT}
-        command: ["sh","scripts/start_jupyter.sh"]
+        command: ["sh","scripts/start_all.sh"]
         volumes:
             - ./services/todos/src:/${TODOS_ROOT}
             - ./services/todos/config:/config
@@ -64,6 +64,16 @@ services:
             ] # disable persistence
         networks:
             - redis_network
+
+
+    node:
+        image: node:latest
+        user: 1000:1000
+        volumes:
+            - ./services/webapp:/webapp
+        command: sh /webapp/start_server.sh
+        ports:
+            - 8000:8000
 
 networks:
     mongo_network:
