@@ -23,7 +23,7 @@ class Todo:
 
 class TodoSchema(Schema):
     user_id = fields.Integer()
-    _id = fields.String(missing="")
+    _id = fields.String(missing="-1")
     uuid = fields.String(missing=make_uuid("TODO"))
     title = fields.String()
     completed = fields.Boolean(missing=False)
@@ -34,6 +34,6 @@ class TodoSchema(Schema):
 
     @post_dump
     def maybe_remove_id(self, data, **kwargs):
-        if "_id" in data and data["_id"] == "":
+        if "_id" in data and data["_id"] == "-1":
             data.pop("_id")
         return data

@@ -5,7 +5,7 @@
   "author": "CODE",
   "private": true,
   "scripts": {
-    "dev": "nuxt --port=8000 --hostname=0.0.0.0",
+    "dev": "nuxt",
     "build": "nuxt build",
     "start": "nuxt start",
     "generate": "nuxt generate"

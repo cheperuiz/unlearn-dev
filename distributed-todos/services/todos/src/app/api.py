@@ -1,4 +1,5 @@
 # pylint: disable=import-error
+# pylint: disable=no-name-in-module
 from uuid import uuid4
 
 import yaml
@@ -12,7 +13,7 @@ from pymongo import MongoClient
 from models.todo import Todo, TodoSchema
 from models.todo_dao import MockDao, MongoDAO
 from library.utils import make_url, replace_env, make_jsend_response
-from library.cache import redis_cachable
+from library.cache import redis_cachable, invalidate_key
 
 TODOS_DB = "/todos/database/todos_db.json"
 
@@ -59,7 +60,7 @@ class TodosList(Resource):
         parser = parser.add_argument("completed", default=False)
         params = parser.parse_args()
         try:
-            todo = todo_schema.load(
+            todo = TodoSchema().load(
                 {"user_id": 0, "title": params["title"], "completed": params["completed"]}
             )
             dao.add_item(todo)
@@ -71,12 +72,12 @@ class TodosList(Resource):
 @todos_ns.route("/<string:uuid>")
 @todos_ns.param("uuid", "Receipt uuid")
 class TodosDetails(Resource):
-    @redis_cachable(r, "TodosDetailsGET", timeout=10)
+    @redis_cachable(r, "TODO-DETAILS", timeout=10)
     def get(self, uuid):
-        print("Called")
         todo = dao.get_by_uuid(uuid)
         return make_jsend_response(data=todo_schema.dump(todo)) if todo else make_jsend_response(404)
 
+    @invalidate_key(r, "TODO-DETAILS")
     def delete(self, uuid):
         r = dao.delete_by_uuid(uuid)
         return make_jsend_response(data=uuid) if r else make_jsend_response(code=404)
@@ -84,6 +85,7 @@ class TodosDetails(Resource):
     @todos_ns.param(
         "data", "Todo data (title & completed status).", _in="body", required=True, example=example_dict,
     )
+    @invalidate_key(r, "TODO-DETAILS")
     def put(self, uuid):
         data = request.get_json()
         try:
@@ -100,9 +102,11 @@ class TodosDetails(Resource):
 # Create flask app:
 flask_app = Flask(__name__)
 flask_app.config["SECRET_KEY"] = str(uuid4())
-CORS(flask_app)
+
 
 # Create API
 api = Api(prefix="/todos-api/v1", title="Distributed TODOs REST API", version="0.1", catch_all_404s=True)
 api.add_namespace(todos_ns)
 api.init_app(flask_app)
+
+CORS(flask_app)

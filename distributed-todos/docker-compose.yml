@@ -30,6 +30,8 @@ services:
             - 8888:8888 #Jupyter Notebook
             - 5000:5000 #REST API
             - 5555:5555 #Flower
+
+            
     reports:
         build:
             context: ./services/reports/docker

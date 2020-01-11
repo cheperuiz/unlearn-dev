@@ -1,4 +1,5 @@
 import json
+from library.utils import make_jsend_response
 
 
 def redis_cachable(r, name, timeout=30):
@@ -7,9 +8,9 @@ def redis_cachable(r, name, timeout=30):
             key_name = name + "-" + uuid
             if r.exists(key_name):
                 s = r.get(key_name)
-                return json.loads(s)
+                return make_jsend_response(data=json.loads(s))
             result = f(self, uuid)
-            s = json.dumps(result)
+            s = json.dumps(result[0]["data"])
             r.set(key_name, s, ex=timeout)
             return result
 
@@ -17,3 +18,14 @@ def redis_cachable(r, name, timeout=30):
 
     return _set_name
 
+
+def invalidate_key(r, name):
+    def _set_name(f):
+        def _invalidate_key(self, uuid):
+            key_name = name + "-" + uuid
+            r.delete(key_name)
+            return f(self, uuid)
+
+        return _invalidate_key
+
+    return _set_name

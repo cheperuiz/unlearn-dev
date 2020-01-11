@@ -29,8 +29,7 @@ export default {
   /*
   ** Plugins to load before mounting the App
   */
-  plugins: [
-  ],
+  plugins: ['~/plugins/axios'],
   /*
   ** Nuxt.js dev-modules
   */
@@ -49,6 +48,11 @@ export default {
   ** See https://axios.nuxtjs.org/options
   */
   axios: {
+    baseURL: "http://localhost:5000/todos-api/v1"
+  },
+  server: {
+    port: 8000, // default: 3000
+    host: '0.0.0.0' // default: localhost
   },
   /*
   ** vuetify module configuration
