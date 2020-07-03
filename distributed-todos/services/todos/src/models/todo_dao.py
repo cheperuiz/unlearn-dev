@@ -7,8 +7,8 @@ class MongoDAO:
         self._schema = schema
 
     def get_all(self):
-        todos_dict = list(self._db.find())
-        for todo in todos_dict:
+        todos = self._db.find()
+        for todo in todos:
             todo["_id"] = str(todo["_id"])
         return self._schema(many=True).load(todos_dict)
 
