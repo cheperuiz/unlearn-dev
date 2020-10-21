@@ -90,12 +90,12 @@ class State:
     def on_enter(self) -> None:
         print(f"ENTERING: {self.__class__.__name__}")
 
+    def on_exit(self) -> None:
+        print(f"EXITING: {self.__class__.__name__}")
+
     def handler_for(self, event_type: EventType) -> Callable[[Event], State]:
         handler_name = "on_" + to_snake_case(event_type.name)
         return getattr(self, handler_name, self.null_handler)
-
-    def on_exit(self) -> None:
-        print(f"EXITING: {self.__class__.__name__}")
 
     def null_handler(self, event: Event) -> State:
         print(f"No handler for {event.event_type} in {self.__class__.__name__}")
@@ -121,11 +121,10 @@ class BuildingThing(State):
         self.thing.counter += 1
         save_thing(self.thing, self.thing_info)
         print(f"Updated thing: {self.thing}")
-        return self
+
+        return self if self.thing.counter < 3 else ThingDone(self.thing, self.thing_info)
 
     def on_thing_ended(self, event: Event) -> State:
-        self.thing.active = False
-        save_thing(self.thing, self.thing_info)
         return ThingDone(self.thing, self.thing_info)
 
     def on_exit(self) -> None:
@@ -142,6 +141,10 @@ class ThingDone(State):
 
     def on_enter(self) -> None:
         super().on_enter()
+
+        self.thing.active = False
+        save_thing(self.thing, self.thing_info)
+
         print(f"{self.thing} has ended and will not handle any more events.")
         print(f"Final state was: {self.thing}")
 
