@@ -88,14 +88,14 @@ class ThingContext:
 ############# Base class for STATE ##########################
 class State:
     def on_enter(self) -> None:
-        print(f"ENTERING: {self.__class__}")
+        print(f"ENTERING: {self.__class__.__name__}")
 
     def handler_for(self, event_type: EventType) -> Callable[[Event], State]:
         handler_name = "on_" + to_snake_case(event_type.name)
         return getattr(self, handler_name, self.null_handler)
 
     def on_exit(self) -> None:
-        print(f"EXITING: {self.__class__}")
+        print(f"EXITING: {self.__class__.__name__}")
 
     def null_handler(self, event: Event) -> State:
         print(f"No handler for {event.event_type} in {self.__class__.__name__}")
@@ -126,13 +126,13 @@ class BuildingThing(State):
     def on_thing_ended(self, event: Event) -> State:
         self.thing.active = False
         save_thing(self.thing, self.thing_info)
-        return FinishThing(self.thing, self.thing_info)
+        return ThingDone(self.thing, self.thing_info)
 
     def on_exit(self) -> None:
-        print(f"EXITING: {self.__class__} with state: {self.thing}")
+        print(f"EXITING: {self.__class__.__name__} with state: {self.thing}")
 
 
-class FinishThing(State):
+class ThingDone(State):
     thing: Thing
     thing_info: ThingInfo
 
@@ -175,7 +175,7 @@ def state_factory(thing: Optional[Thing], thing_info: Optional[ThingInfo]) -> St
         return BuildingThing(thing, thing_info)
 
     if state_name == "FINISH_THING":
-        return FinishThing(thing, thing_info)
+        return ThingDone(thing, thing_info)
 
     raise ValueError(f"No state class for {state_name}")
 
