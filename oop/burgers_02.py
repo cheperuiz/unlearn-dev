@@ -56,7 +56,8 @@ class ImpossibleBurger(AbstractBurger, BurgerMeta):
         self.ingredients.insert(patty_index, "impossiblepatty")
 
     def make_recipe(self):
-        print(f"Recipe for: {self.name}")
+        print(f"Recipe for:", end="")
+        self.announce()
         for ingredient in self.ingredients:
             if "patty" in ingredient:
                 print(f"{ingredient} <---- VEGAN POWER!!!")
