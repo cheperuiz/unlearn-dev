@@ -4,6 +4,7 @@ from typing import Callable, Tuple, Dict, Optional
 from dataclasses import dataclass, field
 import time
 
+
 ####################################################
 #########         LIBRARY CODE          ############
 ####################################################
@@ -97,7 +98,7 @@ class State:
         print(f"EXITING: {self.__class__}")
 
     def null_handler(self, event: Event) -> State:
-        print(f"No handler for {event.event_type} in {self}")
+        print(f"No handler for {event.event_type} in {self.__class__.__name__}")
         return self
 
 
